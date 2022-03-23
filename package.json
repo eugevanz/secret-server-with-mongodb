@@ -13,5 +13,5 @@
   },
   "keywords": [],
   "name": "secret-server-with-mongodb",
-  "description": ""
+  "description": "Your task is to implement a secret server and a React UI to manage the secrets. The secret server can be used to store and share secrets\nusing the random generated URL. But the secret can be read only before the expiration time."
 }
