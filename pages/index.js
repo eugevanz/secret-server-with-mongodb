@@ -28,8 +28,8 @@ export default function Home({ isConnected, movies }) {
           <ul>
             {movies &&
               movies.map((movie) => (
-                <li>
-                  <code>Debug string goes here</code>
+                <li key={movie._id}>
+                  <code>{movie.title}</code>
                 </li>
               ))}
           </ul>
