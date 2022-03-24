@@ -1,69 +1,90 @@
 import Head from "next/head";
+import moment from "moment";
+import { useForm } from "react-hook-form";
 import clientPromise from "../lib/mongodb";
 
-export default function Home({ isConnected, movies }) {
+export default function Home({ isConnected, secrets }) {
+  const { register, handleSubmit, reset } = useForm();
+
+  async function onSubmit(data) {
+    if (data.secret & data.expireAfter) {
+      const res = await fetch("/api/secret", {
+        method: "POST",
+        body: JSON.stringify({
+          secret: data.secret,
+          expireAfter: data.expireAfter,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      const json = await res.json();
+      console.log(json);
+    }
+
+    reset();
+  }
+
+  function idTime(_id) {
+    const text = _id.substr(0, 8);
+    return new Date(parseInt(text, 16) * 1000);
+  }
+
+  function expiryDate(createdAt, expireAfter) {
+    const nextDate = new Date(createdAt.getTime() + expireAfter);
+    return moment(nextDate).format("dddd, MMMM Do YYYY, h:mm:ss a");
+  }
+
   return (
     <div className="container">
       <Head>
         <title>Secret Server Task</title>
-        <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="icon"
+          href="https://github.com/eugevanz/secret-server-with-mongodb/blob/6a1db11f31d0abccc9d3017b1e985f47bc2954ec/public/favicon.ico"
+        />
       </Head>
 
       <main>
-        <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
-        </h1>
-
         {isConnected ? (
-          <h2 className="subtitle">You are connected to MongoDB</h2>
+          <>
+            <h4>You are connected</h4>
+
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <input
+                {...register("secret")}
+                type="text"
+                placeholder="Secret"
+              ></input>
+              <input
+                {...register("expireAfter")}
+                type="number"
+                placeholder="Lifespan (in seconds)"
+              ></input>
+              <button type="submit">+ Add secret</button>
+            </form>
+
+            <ol>
+              {secrets &&
+                secrets.map((secret) => (
+                  <li key={secret._id}>
+                    <h3>{secret.secret}</h3>
+                    <p>
+                      Expires on{" "}
+                      {expiryDate(idTime(secret._id), secret.expireAfter)}
+                    </p>
+                    <small>
+                      Created on{" "}
+                      {moment(idTime(secret._id)).format(
+                        "dddd, MMMM Do YYYY, h:mm:ss a"
+                      )}
+                    </small>
+                  </li>
+                ))}
+            </ol>
+          </>
         ) : (
-          <h2 className="subtitle">
-            You are NOT connected to MongoDB. Check the <code>README.md</code>{" "}
-            for instructions.
-          </h2>
+          <h2>Connect to continue...</h2>
         )}
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-          <ul>
-            {movies &&
-              movies.map((movie) => (
-                <li key={movie._id}>
-                  <code>{movie.title}</code>
-                </li>
-              ))}
-          </ul>
-        </p>
-
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
       </main>
 
       <footer>
@@ -233,19 +254,17 @@ export default function Home({ isConnected, movies }) {
 export async function getServerSideProps(context) {
   try {
     const client = await clientPromise;
-    // client.db() will be the default database passed in the MONGODB_URI
-    // You can change the database by calling the client.db() function and specifying a database like:
-    // const db = client.db("myDatabase");
-    // Then you can execute queries against your database like so:
-    // db.find({}) or any of the MongoDB Node Driver commands
-    const movies = await client
+    const secrets = await client
       .db()
-      .collection("movies")
-      .find({})
-      .limit(20)
+      .collection("secrets_col")
+      .find()
       .toArray();
+
     return {
-      props: { isConnected: true, movies: JSON.parse(JSON.stringify(movies)) },
+      props: {
+        isConnected: true,
+        secrets: JSON.parse(JSON.stringify(secrets)),
+      },
     };
   } catch (e) {
     console.error(e);
