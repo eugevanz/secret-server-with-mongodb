@@ -9,7 +9,7 @@ function expiryDate(createdAt, expireAfter) {
   return new Date(createdAt.getTime() + expireAfter).toString();
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method === "POST") {
     console.log(req.body);
     const secret = req.body.secret;
