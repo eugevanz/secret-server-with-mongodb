@@ -1,37 +1,32 @@
 import Head from "next/head";
+import { useRouter } from "next/router";
 import moment from "moment";
 import { useForm } from "react-hook-form";
 import clientPromise from "../lib/mongodb";
+import idTime from "../util/idTime";
+import expiryDate from "../util/expiryDate";
 
 export default function Home({ isConnected, secrets }) {
   const { register, handleSubmit, reset } = useForm();
+  const { replace, asPath } = useRouter();
 
   async function onSubmit(data) {
-    if (data.secret & data.expireAfter) {
-      const res = await fetch("/api/secret", {
+    (data.secret !== "") & (data.expireAfter !== "") &&
+      fetch("/api/secret", {
         method: "POST",
         body: JSON.stringify({
           secret: data.secret,
           expireAfter: data.expireAfter,
         }),
         headers: { "Content-Type": "application/json" },
+      }).then(() => {
+        replace(asPath);
+        reset();
       });
-      
-      const json = await res.json();
-      console.log(json);
-    }
-
-    reset();
   }
 
-  function idTime(_id) {
-    const text = _id.substr(0, 8);
-    return new Date(parseInt(text, 16) * 1000);
-  }
-
-  function expiryDate(createdAt, expireAfter) {
-    const nextDate = new Date(createdAt.getTime() + expireAfter);
-    return moment(nextDate).format("dddd, MMMM Do YYYY, h:mm:ss a");
+  async function onSearchSubmit(data) {
+    data.search !== "" && fetch(`/api/secret/${data.search}`);
   }
 
   return (
@@ -48,6 +43,15 @@ export default function Home({ isConnected, secrets }) {
         {isConnected ? (
           <>
             <h4>You are connected</h4>
+
+            <form onSubmit={handleSubmit(onSearchSubmit)}>
+              <input
+                {...register("search")}
+                type="text"
+                placeholder="Search"
+              ></input>
+              <button type="submit">Search</button>
+            </form>
 
             <form onSubmit={handleSubmit(onSubmit)}>
               <input
@@ -69,8 +73,7 @@ export default function Home({ isConnected, secrets }) {
                   <li key={secret._id}>
                     <h3>{secret.secret}</h3>
                     <p>
-                      Expires on{" "}
-                      {expiryDate(idTime(secret._id), secret.expireAfter)}
+                      Expires on {expiryDate(secret._id, secret.expireAfter)}
                     </p>
                     <small>
                       Created on{" "}
