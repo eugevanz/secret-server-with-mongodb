@@ -1,9 +1,10 @@
 import clientPromise from "../../lib/mongodb";
 
 export default async (req, res) => {
-  const { db } = await clientPromise.connectToDatabase();
+  const client = await clientPromise;
 
-  const movies = await db
+  const movies = await client
+    .db()
     .collection("movies")
     .find({})
     .sort({ metacritic: -1 })

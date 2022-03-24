@@ -1,7 +1,7 @@
 import Head from "next/head";
 import clientPromise from "../lib/mongodb";
 
-export default function Home({ isConnected }) {
+export default function Home({ isConnected, movies }) {
   return (
     <div className="container">
       <Head>
@@ -25,7 +25,14 @@ export default function Home({ isConnected }) {
 
         <p className="description">
           Get started by editing <code>pages/index.js</code>
-          <code>Debug string goes here</code>
+          <ul>
+            {movies &&
+              movies.map((movie) => (
+                <li>
+                  <code>Debug string goes here</code>
+                </li>
+              ))}
+          </ul>
         </p>
 
         <div className="grid">
@@ -231,14 +238,19 @@ export async function getServerSideProps(context) {
     // const db = client.db("myDatabase");
     // Then you can execute queries against your database like so:
     // db.find({}) or any of the MongoDB Node Driver commands
-    const isConnected= await client.isConnected();
+    const movies = await client
+      .db()
+      .collection("movies")
+      .find({})
+      .limit(20)
+      .toArray();
     return {
-      props: { isConnected }
+      props: { isConnected: true, movies: JSON.parse(JSON.stringify(movies)) },
     };
   } catch (e) {
     console.error(e);
     return {
-      props: { isConnected: false }
+      props: { isConnected: false },
     };
   }
 }
