@@ -1,16 +1,40 @@
 import Head from "next/head";
 import { useRouter } from "next/router";
-import moment from "moment";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
+import { useState } from "react";
+import {
+  FlatList,
+  StyleSheet,
+  Text,
+  SafeAreaView,
+  TextInput,
+  View,
+  Button,
+} from "react-native-web";
 import clientPromise from "../lib/mongodb";
-import idTime from "../util/idTime";
-import expiryDate from "../util/expiryDate";
+import Secret from "../components/Secret";
+import AddSecret from "../components/AddSecret";
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 22,
+    maxWidth: 512,
+  },
+  h3: { fontSize: 22 },
+  input: {
+    height: 40,
+    marginTop: 12,
+    borderWidth: 1,
+    padding: 10,
+  },
+});
 
 export default function Home({ isConnected, secrets }) {
-  const { register, handleSubmit, reset } = useForm();
+  const { control, register, handleSubmit, reset } = useForm();
   const { replace, asPath } = useRouter();
+  const [searches, setSearches] = useState([]);
 
-  async function onSubmit(data) {
+  function onSubmit(data) {
     (data.secret !== "") & (data.expireAfter !== "") &&
       fetch("/api/secret", {
         method: "POST",
@@ -25,9 +49,20 @@ export default function Home({ isConnected, secrets }) {
       });
   }
 
-  async function onSearchSubmit(data) {
-    data.search !== "" && fetch(`/api/secret/${data.search}`);
+  function onSearch({ term }) {
+    const termInSecrets = secrets.filter((secret) =>
+      secret.secret.toLowerCase().includes(term.toLowerCase())
+    );
+
+    if (term.length & termInSecrets.length)
+      setSearches(
+        termInSecrets.map((secret) =>
+          fetch(`/api/secret/${secret._id}`).then((data) => data)
+        )
+      );
   }
+
+  const renderItem = ({ item }) => <Item title={item.title} />;
 
   return (
     <div className="container">
@@ -41,215 +76,24 @@ export default function Home({ isConnected, secrets }) {
 
       <main>
         {isConnected ? (
-          <>
-            <h4>You are connected</h4>
+          <View style={styles.container}>
+            <Text style={styles.h3}>You are connected</Text>
 
-            <form onSubmit={handleSubmit(onSearchSubmit)}>
-              <input
-                {...register("search")}
-                type="text"
-                placeholder="Search"
-              ></input>
-              <button type="submit">Search</button>
-            </form>
+            <AddSecret></AddSecret>
 
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <input
-                {...register("secret")}
-                type="text"
-                placeholder="Secret"
-              ></input>
-              <input
-                {...register("expireAfter")}
-                type="number"
-                placeholder="Lifespan (in seconds)"
-              ></input>
-              <button type="submit">+ Add secret</button>
-            </form>
-
-            <ol>
-              {secrets &&
-                secrets.map((secret) => (
-                  <li key={secret._id}>
-                    <h3>{secret.secret}</h3>
-                    <p>
-                      Expires on {expiryDate(secret._id, secret.expireAfter)}
-                    </p>
-                    <small>
-                      Created on{" "}
-                      {moment(idTime(secret._id)).format(
-                        "dddd, MMMM Do YYYY, h:mm:ss a"
-                      )}
-                    </small>
-                  </li>
-                ))}
-            </ol>
-          </>
+            <FlatList
+              style={{ marginTop: 48 }}
+              data={secrets}
+              keyExtractor={(item) => item._id}
+              renderItem={(item) => <Secret item={item} />}
+            ></FlatList>
+          </View>
         ) : (
-          <h2>Connect to continue...</h2>
+          <View style={styles.container}>
+            <Text style={styles.h3}>Connect to continue...</Text>
+          </View>
         )}
       </main>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
-      </footer>
-
-      <style jsx>{`
-        .container {
-          min-height: 100vh;
-          padding: 0 0.5rem;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-
-        main {
-          padding: 5rem 0;
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-        }
-
-        footer {
-          width: 100%;
-          height: 100px;
-          border-top: 1px solid #eaeaea;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        footer img {
-          margin-left: 0.5rem;
-        }
-
-        footer a {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-        }
-
-        a {
-          color: inherit;
-          text-decoration: none;
-        }
-
-        .title a {
-          color: #0070f3;
-          text-decoration: none;
-        }
-
-        .title a:hover,
-        .title a:focus,
-        .title a:active {
-          text-decoration: underline;
-        }
-
-        .title {
-          margin: 0;
-          line-height: 1.15;
-          font-size: 4rem;
-        }
-
-        .title,
-        .description {
-          text-align: center;
-        }
-
-        .subtitle {
-          font-size: 2rem;
-        }
-
-        .description {
-          line-height: 1.5;
-          font-size: 1.5rem;
-        }
-
-        code {
-          background: #fafafa;
-          border-radius: 5px;
-          padding: 0.75rem;
-          font-size: 1.1rem;
-          font-family: Menlo, Monaco, Lucida Console, Liberation Mono,
-            DejaVu Sans Mono, Bitstream Vera Sans Mono, Courier New, monospace;
-        }
-
-        .grid {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-wrap: wrap;
-
-          max-width: 800px;
-          margin-top: 3rem;
-        }
-
-        .card {
-          margin: 1rem;
-          flex-basis: 45%;
-          padding: 1.5rem;
-          text-align: left;
-          color: inherit;
-          text-decoration: none;
-          border: 1px solid #eaeaea;
-          border-radius: 10px;
-          transition: color 0.15s ease, border-color 0.15s ease;
-        }
-
-        .card:hover,
-        .card:focus,
-        .card:active {
-          color: #0070f3;
-          border-color: #0070f3;
-        }
-
-        .card h3 {
-          margin: 0 0 1rem 0;
-          font-size: 1.5rem;
-        }
-
-        .card p {
-          margin: 0;
-          font-size: 1.25rem;
-          line-height: 1.5;
-        }
-
-        .logo {
-          height: 1em;
-        }
-
-        @media (max-width: 600px) {
-          .grid {
-            width: 100%;
-            flex-direction: column;
-          }
-        }
-      `}</style>
-
-      <style jsx global>{`
-        html,
-        body {
-          padding: 0;
-          margin: 0;
-          font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
-            Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue,
-            sans-serif;
-        }
-
-        * {
-          box-sizing: border-box;
-        }
-      `}</style>
     </div>
   );
 }

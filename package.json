@@ -6,17 +6,23 @@
     "start": "next start"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.1.1",
+    "@fortawesome/free-regular-svg-icons": "^6.1.1",
+    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/react-fontawesome": "^0.1.18",
     "moment": "^2.29.1",
     "mongodb": "^4.1.3",
     "next": "latest",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
-    "react-hook-form": "^7.28.1"
+    "react-hook-form": "^7.28.1",
+    "react-native-web": "^0.17.7"
   },
   "keywords": [],
   "name": "secret-server-with-mongodb",
   "description": "Your task is to implement a secret server and a React UI to manage the secrets. The secret server can be used to store and share secrets\nusing the random generated URL. But the secret can be read only before the expiration time.",
   "devDependencies": {
+    "babel-plugin-react-native-web": "^0.17.7",
     "prettier": "2.6.0"
   }
 }
