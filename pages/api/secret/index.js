@@ -7,10 +7,13 @@ export default async function handler(req, res) {
   const collection = client.db().collection("secrets_col");
 
   if (req.method === "POST") {
-    const { secret, expireAfter } = req.body;
+    const { secret, expireAfterSeconds } = req.body;
 
     try {
-      const promise = await collection.insertOne({ secret, expireAfter });
+      const promise = await collection.insertOne({
+        secret,
+        expireAfterSeconds,
+      });
       const time = ObjectId(promise._id).getTimestamp();
 
       res.status(200).json({
@@ -18,7 +21,7 @@ export default async function handler(req, res) {
         secretText: promise.secret,
         createdAt: moment(time).format("dddd, MMMM Do YYYY, h:mm:ss a"),
         expiresAt: moment(time)
-          .add(parseInt(expireAfter), "s")
+          .add(parseInt(expireAfterSeconds), "s")
           .format("dddd, MMMM Do YYYY, h:mm:ss a"),
       });
     } catch (error) {

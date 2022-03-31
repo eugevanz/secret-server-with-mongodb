@@ -27,7 +27,7 @@ export default function AddSecret() {
         method: "POST",
         body: JSON.stringify({
           secret: secret,
-          expireAfter: timeInSeconds,
+          expireAfterSeconds: timeInSeconds,
         }),
         headers: { "Content-Type": "application/json" },
       }).then(() => {

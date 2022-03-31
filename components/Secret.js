@@ -36,7 +36,9 @@ export default function Secret({ item: { item } }) {
   const [expiry, setExpiry] = useState(null);
 
   async function expiryDate() {
-    const res = await fetch(`/api/expiry/${item.expireAfter}/${item._id}`);
+    const res = await fetch(
+      `/api/expiry/${item.expireAfterSeconds}/${item._id}`
+    );
     const data = await res.json();
     setExpiry(data);
   }
