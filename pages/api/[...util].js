@@ -9,19 +9,16 @@ export default function handler(req, res) {
 
   try {
     const time = ObjectId(_id).getTimestamp();
+    const expire = parseInt(expireAfter);
 
-    if (utility === "expiry")
+    if (utility === "expiry") {
+      if (expire === 0) res.status(200).json(JSON.stringify("Never Expires"));
+
       res
         .status(200)
-        .json(
-          JSON.stringify(
-            moment(time).add(parseInt(expireAfter), "s").calendar()
-          )
-        );
-
-    if (utility === "time")
-      res.status(200).json(JSON.stringify(moment(time).calendar()));
+        .json(JSON.stringify(moment(time).add(expire, "s").calendar()));
+    }
   } catch (error) {
-    console.dir(error);
+    res.status(200).json(JSON.stringify(error));
   }
 }

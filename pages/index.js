@@ -1,16 +1,5 @@
 import Head from "next/head";
-import { useRouter } from "next/router";
-import { useForm, Controller } from "react-hook-form";
-import { useState } from "react";
-import {
-  FlatList,
-  StyleSheet,
-  Text,
-  SafeAreaView,
-  TextInput,
-  View,
-  Button,
-} from "react-native-web";
+import { FlatList, StyleSheet, Text, View } from "react-native-web";
 import clientPromise from "../lib/mongodb";
 import Secret from "../components/Secret";
 import AddSecret from "../components/AddSecret";
@@ -18,7 +7,8 @@ import AddSecret from "../components/AddSecret";
 const styles = StyleSheet.create({
   container: {
     padding: 22,
-    maxWidth: 512,
+    flexBasis: 576,
+    flexShrink: 1,
   },
   h3: { fontSize: 22 },
   input: {
@@ -30,40 +20,6 @@ const styles = StyleSheet.create({
 });
 
 export default function Home({ isConnected, secrets }) {
-  const { control, register, handleSubmit, reset } = useForm();
-  const { replace, asPath } = useRouter();
-  const [searches, setSearches] = useState([]);
-
-  function onSubmit(data) {
-    (data.secret !== "") & (data.expireAfter !== "") &&
-      fetch("/api/secret", {
-        method: "POST",
-        body: JSON.stringify({
-          secret: data.secret,
-          expireAfter: data.expireAfter,
-        }),
-        headers: { "Content-Type": "application/json" },
-      }).then(() => {
-        replace(asPath);
-        reset();
-      });
-  }
-
-  function onSearch({ term }) {
-    const termInSecrets = secrets.filter((secret) =>
-      secret.secret.toLowerCase().includes(term.toLowerCase())
-    );
-
-    if (term.length & termInSecrets.length)
-      setSearches(
-        termInSecrets.map((secret) =>
-          fetch(`/api/secret/${secret._id}`).then((data) => data)
-        )
-      );
-  }
-
-  const renderItem = ({ item }) => <Item title={item.title} />;
-
   return (
     <div className="container">
       <Head>
@@ -75,24 +31,30 @@ export default function Home({ isConnected, secrets }) {
       </Head>
 
       <main>
-        {isConnected ? (
-          <View style={styles.container}>
-            <Text style={styles.h3}>You are connected</Text>
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            paddingBottom: 28,
+          }}
+        >
+          {isConnected ? (
+            <View style={[styles.container, { padding: 0 }]}>
+              <AddSecret></AddSecret>
 
-            <AddSecret></AddSecret>
-
-            <FlatList
-              style={{ marginTop: 48 }}
-              data={secrets}
-              keyExtractor={(item) => item._id}
-              renderItem={(item) => <Secret item={item} />}
-            ></FlatList>
-          </View>
-        ) : (
-          <View style={styles.container}>
-            <Text style={styles.h3}>Connect to continue...</Text>
-          </View>
-        )}
+              <FlatList
+                style={{ marginTop: 48 }}
+                data={secrets}
+                keyExtractor={(item) => item._id}
+                renderItem={(item) => <Secret item={item} />}
+              ></FlatList>
+            </View>
+          ) : (
+            <View style={styles.container}>
+              <Text style={styles.h3}>Connect to continue...</Text>
+            </View>
+          )}
+        </View>
       </main>
     </div>
   );
