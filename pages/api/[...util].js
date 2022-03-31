@@ -19,6 +19,6 @@ export default function handler(req, res) {
         .json(JSON.stringify(moment(time).add(expire, "s").calendar()));
     }
   } catch (error) {
-    res.status(200).json(JSON.stringify(error));
+    res.status(200).json(JSON.stringify(error.message));
   }
 }

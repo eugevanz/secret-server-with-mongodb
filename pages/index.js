@@ -36,6 +36,8 @@ export default function Home({ isConnected, secrets }) {
             flexDirection: "row",
             justifyContent: "center",
             paddingBottom: 28,
+            padding: 14,
+            paddingTop: 0,
           }}
         >
           {isConnected ? (
