@@ -36,6 +36,7 @@ export default function AddSecret() {
         setSeconds(0);
         setMinutes(0);
         setHours(0);
+        setExpanded(!expanded);
       });
   }
 
